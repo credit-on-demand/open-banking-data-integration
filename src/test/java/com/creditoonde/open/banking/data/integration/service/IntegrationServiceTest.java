@@ -1,5 +1,7 @@
 package com.creditoonde.open.banking.data.integration.service;
 
+import com.creditoonde.open.banking.data.integration.dto.Brand;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,9 +14,10 @@ class IntegrationServiceTest {
 
     @Test
     void shouldLoadIntegrationData() {
-        String itauData = integrationService.retrievePersonalLoansData();
+        Brand brand = integrationService.retrievePersonalLoansData();
 
-        assert itauData.contains("EMPRESTIMO_CREDITO_PESSOAL_SEM_CONSIGNACAO");
+        System.out.println(brand.getName());
+        Assertions.assertEquals("Itaú", brand.getName());
     }
 
 }
