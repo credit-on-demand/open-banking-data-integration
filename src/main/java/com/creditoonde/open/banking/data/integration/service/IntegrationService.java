@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -23,32 +25,36 @@ public class IntegrationService {
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(5);
     private static final String URI_PERSONAL_LOANS = "/personal-loans";
 
-    private final WebClient integrationClient;
+    private final List<WebClient> integrationClients;
 
     @Autowired
-    public IntegrationService(@Qualifier("integration") WebClient integrationClient) {
-        this.integrationClient = integrationClient;
+    public IntegrationService(@Qualifier("integration") List<WebClient> integrationClients) {
+        this.integrationClients = integrationClients;
     }
 
-    public List<Brand> retrievePersonalLoansData() {
+    public List<Brand> fetchPersonalLoansData() {
         ObjectMapper mapper = new ObjectMapper();
-        List<Brand> brands = new ArrayList<>();
-        return integrationClient
-                .get()
-                .uri(URI_PERSONAL_LOANS)
-                .accept(MediaType.APPLICATION_JSON)
-                .retrieve()
-                .bodyToMono(JsonNode.class)
-                .map(brand -> brand.path("data").path("brand"))
-                .map(brand -> {
-                    try {
-                        brands.add(mapper.readValue(brand.traverse(), Brand.class));
-                        return brands;
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        return brands;
-                    }
-                }).block(REQUEST_TIMEOUT);
+        List<Brand> brands;
+        Flux<Mono<Brand>> brandMonos =
+                Flux.fromIterable(integrationClients)
+                        .flatMap(client -> client.get()
+                                .uri(URI_PERSONAL_LOANS)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .retrieve()
+                                .bodyToMono(JsonNode.class)
+                                .map(brand -> brand.path("data").path("brand"))
+                                .map(brand -> {
+                                    try {
+                                        Brand b = mapper.readValue(brand.traverse(), Brand.class);
+                                        return Mono.just(b);
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                        return Mono.empty();
+                                    }
+                                }));
+        Flux<Brand> brandFlux = Flux.merge(brandMonos);
+        brands = brandFlux.collectList().block(REQUEST_TIMEOUT);
+        return brands;
     }
 
     public List<Product> companiesToProducts(List<Company> companies) {

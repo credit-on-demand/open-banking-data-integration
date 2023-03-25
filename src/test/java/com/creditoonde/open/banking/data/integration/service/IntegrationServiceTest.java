@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @SpringBootTest
@@ -21,17 +22,19 @@ class IntegrationServiceTest {
 
     @Test
     void shouldLoadIntegrationData() throws JsonProcessingException {
-        List<Brand> brands = integrationService.retrievePersonalLoansData();
+        List<Brand> brands = integrationService.fetchPersonalLoansData();
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
-        String json = ow.writeValueAsString(brands.get(0).getCompanies().get(1));
+        String json = ow.writeValueAsString(brands);
+        brands.sort(Comparator.comparing(Brand::getName));
 
         System.out.println(json);
-        Assertions.assertEquals("Itaú", brands.get(0).getName());
+        Assertions.assertEquals("Grupo Pan", brands.get(0).getName());
+        Assertions.assertEquals("Itaú", brands.get(1).getName());
     }
 
     @Test
     void shouldCreateListOfProductsFromIntegrationData() throws JsonProcessingException {
-        List<Brand> brands = integrationService.retrievePersonalLoansData();
+        List<Brand> brands = integrationService.fetchPersonalLoansData();
         List<Product> products = new ArrayList<>();
         brands.forEach(brand -> {
             products.addAll(integrationService.companiesToProducts(brand.getCompanies()));
