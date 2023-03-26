@@ -35,7 +35,7 @@ public class IntegrationService {
     public List<Brand> fetchPersonalLoansData() {
         ObjectMapper mapper = new ObjectMapper();
         List<Brand> brands;
-        Flux<Mono<Brand>> brandMonos =
+        Flux<Mono<Brand>> fluxMonoList =
                 Flux.fromIterable(integrationClients)
                         .flatMap(client -> client.get()
                                 .uri(URI_PERSONAL_LOANS)
@@ -52,26 +52,26 @@ public class IntegrationService {
                                         return Mono.empty();
                                     }
                                 }));
-        Flux<Brand> brandFlux = Flux.merge(brandMonos);
+        Flux<Brand> brandFlux = Flux.merge(fluxMonoList);
         brands = brandFlux.collectList().block(REQUEST_TIMEOUT);
         return brands;
     }
 
     public List<Product> companiesToProducts(List<Company> companies) {
         List<Product> products = new ArrayList<>();
-        companies
-                .forEach(company -> company.getPersonalLoans()
-                        .forEach(personalLoan -> personalLoan.getInterestRates()
-                                .forEach(interestRate -> {
-                                    Product product = Product.builder()
-                                            .name(personalLoan.getType())
-                                            .rateIndexer(interestRate.getReferentialRateIndexer())
-                                            .financialInstitution(company.getName())
-                                            .minInterestRate(formatToDouble(interestRate.getMinimumRate()))
-                                            .maxInterestRate(formatToDouble(interestRate.getMaximumRate()))
-                                            .build();
-                                    products.add(product);
-                                })));
+        companies.forEach(company ->
+                company.getPersonalLoans().forEach(personalLoan ->
+                        personalLoan.getInterestRates().forEach(interestRate -> {
+                            Product product = Product.builder()
+                                    .name(personalLoan.getType())
+                                    .rateIndexer(interestRate.getReferentialRateIndexer())
+                                    .financialInstitution(company.getName())
+                                    .minInterestRate(formatToDouble(interestRate.getMinimumRate()))
+                                    .maxInterestRate(formatToDouble(interestRate.getMaximumRate()))
+                                    .build();
+                            products.add(product);
+                        }))
+        );
         return products;
     }
 }

@@ -24,11 +24,11 @@ public class ProductIntegrationController {
     private IntegrationService integrationService;
 
     @PostMapping
-    public ResponseEntity<Void> retrieveAndSendProductsList() {
+    public ResponseEntity<List<Product>> fetchAndSendProductsList() {
         List<Brand> brands = integrationService.fetchPersonalLoansData();
         List<Product> products = new ArrayList<>();
         brands.forEach(brand -> products.addAll(integrationService.companiesToProducts(brand.getCompanies())));
         productService.sendAllProductsToSimulation(products);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok().body(products);
     }
 }

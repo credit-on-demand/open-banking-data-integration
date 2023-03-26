@@ -13,14 +13,14 @@ import java.util.Arrays;
 import java.util.List;
 
 @SpringBootTest
-class ProductServiceTest {
+class ProductServiceTestv1 {
 
     @Autowired
     private ProductService productService;
 
     @Test
     void shouldRetrieveAllProducts() throws JsonProcessingException {
-        List<Product> products = productService.retrieveProducts();
+        List<Product> products = productService.fetchProducts();
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String json = ow.writeValueAsString(products);
         System.out.println(json);

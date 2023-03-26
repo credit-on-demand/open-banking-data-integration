@@ -6,9 +6,13 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
@@ -18,11 +22,11 @@ public class ProductService {
     private final WebClient simulationClient;
 
     @Autowired
-    public ProductService(@Qualifier("product") WebClient simulationClient) {
+    public ProductService(@Qualifier("simulation") WebClient simulationClient) {
         this.simulationClient = simulationClient;
     }
 
-    public List<Product> retrieveProducts() {
+    public List<Product> fetchProducts() {
         return simulationClient
                 .get()
                 .uri(URI_PRODUCTS)
@@ -33,16 +37,22 @@ public class ProductService {
                 .block(REQUEST_TIMEOUT);
     }
 
-    public Product sendProductToSimulation(Product product) {
+    public Mono<Product> sendProductToSimulation(Product product) {
         return simulationClient
                 .post()
                 .uri(URI_PRODUCTS)
                 .bodyValue(product)
-                .exchangeToMono(clientResponse -> clientResponse.bodyToMono(Product.class))
-                .block(REQUEST_TIMEOUT);
+                .exchangeToMono(clientResponse -> clientResponse.bodyToMono(Product.class));
     }
 
-    public void sendAllProductsToSimulation(List<Product> products) {
-        products.forEach(this::sendProductToSimulation);
+    public List<Product> sendAllProductsToSimulation(List<Product> products) {
+        List<Mono<Product>> monoList = products.stream()
+                .map(Mono::just)
+                .map(productMono -> productMono
+                        .subscribeOn(Schedulers.boundedElastic())
+                        .flatMap(this::sendProductToSimulation))
+                .collect(Collectors.toList());
+        Flux<Product> merged = Flux.merge(monoList);
+        return merged.collectList().block(REQUEST_TIMEOUT);
     }
 }

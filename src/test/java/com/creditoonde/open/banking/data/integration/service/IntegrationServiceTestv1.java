@@ -15,7 +15,7 @@ import java.util.Comparator;
 import java.util.List;
 
 @SpringBootTest
-class IntegrationServiceTest {
+class IntegrationServiceTestv1 {
 
     @Autowired
     private IntegrationService integrationService;

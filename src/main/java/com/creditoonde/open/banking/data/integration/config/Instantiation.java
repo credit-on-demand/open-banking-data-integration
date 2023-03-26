@@ -24,7 +24,7 @@ public class Instantiation {
     }
 
     @Bean
-    @Qualifier("product")
+    @Qualifier("simulation")
     public WebClient simulationClient(ApiProperties apiProperties) {
         return WebClient.create(apiProperties.getSimulationUrl());
     }
