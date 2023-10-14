@@ -43,7 +43,7 @@ class ProductServiceTest extends Specification {
 
         then:
         StepVerifier.create(result)
-                .expectNextSequence(Arrays.asList(expectedProducts))
+                .expectNextSequence([expectedProducts])
                 .expectComplete()
                 .verify(Duration.ofSeconds(5))
     }

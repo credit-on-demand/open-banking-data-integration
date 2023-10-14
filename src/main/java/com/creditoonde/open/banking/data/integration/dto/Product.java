@@ -3,17 +3,15 @@ package com.creditoonde.open.banking.data.integration.dto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import java.io.Serializable;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Product implements Serializable {
-    private static final long serialVersionUID = 1L;
-
+@EqualsAndHashCode
+public class Product {
     private String name;
     private String rateIndexer;
     private double minInterestRate;

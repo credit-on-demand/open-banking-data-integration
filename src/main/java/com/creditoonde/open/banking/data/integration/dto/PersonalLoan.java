@@ -1,6 +1,7 @@
 package com.creditoonde.open.banking.data.integration.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -11,6 +12,7 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode
 public class PersonalLoan {
     private String type;
     private Fee fees;
@@ -22,6 +24,7 @@ public class PersonalLoan {
     @Setter
     @AllArgsConstructor
     @NoArgsConstructor
+    @EqualsAndHashCode
     class Fee {
         private List<Service> services;
     }
